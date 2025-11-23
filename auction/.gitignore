@@ -1,0 +1,22 @@
+# Maven
+target/
+# Gradle
+build/
+
+# IDE files
+.idea/
+.metadata/
+.project
+.classpath
+.settings/
+*.iml
+.vscode/
+
+# System files
+.DS_Store
+Thumbs.db
+*.log
+
+# Sensitive files
+application-local.properties
+env.properties
