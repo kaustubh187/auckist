@@ -37,7 +37,7 @@ public class ProductController {
     private JwtService jwtService;
 
     @PostMapping(consumes = {"multipart/form-data"})
-    public ResponseEntity<GetProductDto> uploadProduct(@RequestPart("data") @Valid CreateProductDto dto, @RequestParam("files") List<MultipartFile> files, @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<GetProductDto> uploadProduct(@ModelAttribute @Valid CreateProductDto dto, @RequestParam("files") List<MultipartFile> files, @AuthenticationPrincipal UserDetails userDetails) {
 
         Product savedProduct = productService.saveProduct(dto,files,userDetails.getUsername());
         return new ResponseEntity<>(productMapper.toDto(savedProduct), HttpStatus.CREATED);
