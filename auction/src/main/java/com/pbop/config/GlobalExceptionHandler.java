@@ -11,6 +11,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -18,6 +20,8 @@ import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler({RuntimeException.class})
     public ResponseEntity<ApiErrorDto> handleRuntimeException(RuntimeException exception) {
@@ -88,7 +92,7 @@ public class GlobalExceptionHandler {
         );
 
 
-        System.err.println("JWT Authentication Failed: " + exception.getMessage());
+        log.info("JWT Authentication Failed: {}", exception.getMessage());
 
 
         return new ResponseEntity<>(errorDto, status);

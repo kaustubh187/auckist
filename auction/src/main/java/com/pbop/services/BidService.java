@@ -1,5 +1,6 @@
 package com.pbop.services;
 
+import com.pbop.config.GlobalExceptionHandler;
 import com.pbop.dtos.auction.PriceUpdateDto;
 import com.pbop.dtos.bid.CreateBidDto;
 import com.pbop.dtos.bid.GetBidDto;
@@ -15,6 +16,8 @@ import com.pbop.repositories.AuctionRepo;
 import com.pbop.repositories.BidRepo;
 import com.pbop.repositories.UserRepo;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -28,7 +31,9 @@ public class BidService {
     private final AuctionRepo auctionRepository; // To check auction status/price
     private final UserRepo userRepository;
     private final BidMapper mapper;
-    private final SimpMessagingTemplate messagingTemplate; // For WebSocket messaging
+    private final SimpMessagingTemplate messagingTemplate;// For WebSocket messaging
+
+    private static final Logger log = LoggerFactory.getLogger(BidService.class);
 
     @Autowired
     public BidService(BidRepo bidRepository, AuctionRepo auctionRepository, UserRepo userRepository, BidMapper mapper, SimpMessagingTemplate messagingTemplate) {
@@ -43,7 +48,7 @@ public class BidService {
     // 1. Placing a Bid
     @Transactional // Essential for thread safety (concurrency)
     public GetBidDto placeBid(CreateBidDto dto, Long buyerId) {
-
+        log.debug("Placing bid: {} by user: {}", dto, buyerId);
         Auction auction = auctionRepository.findById(dto.auctionId())
                 .orElseThrow(() -> new AuctionNotFoundException("Auction not found."));
 
@@ -51,6 +56,7 @@ public class BidService {
 
         // V1: Check Auction Status
         if (auction.getStatus() != AuctionStatus.Open) {
+            log.error("Attempted to bid on non-open auction: {}", auction.getAuctionId());
             throw new BiddingRuleException("Bids can only be placed on OPEN auctions.");
         }
 
@@ -61,6 +67,8 @@ public class BidService {
         BigDecimal currentHighestPrice = highestBid != null ? highestBid.getBidPrice() : auction.getStartingPrice();
 
         if (dto.bidPrice().compareTo(currentHighestPrice) <= 0) {
+            log.error("Bid price {} is not higher than current highest price {} for auction {}",
+                    dto.bidPrice(), currentHighestPrice, auction.getAuctionId());
             throw new BiddingRuleException("Your bid must be higher than the current highest price of " + currentHighestPrice);
         }
 
@@ -70,6 +78,7 @@ public class BidService {
             bidRepository.save(highestBid); // Set old bid to INACTIVE
         }
 
+        log.debug("Old highest bid updated to INACTIVE for auction: {}", auction.getAuctionId());
         // --- Create New Bid ---
         User buyer = userRepository.findById(buyerId)
                 .orElseThrow(() -> new RuntimeException("Authenticated user not found."));
@@ -79,9 +88,11 @@ public class BidService {
         newBid.setAuction(auction);
         newBid.setStatus(BidStatus.Active); // Ensure it's active
 
+        log.debug("Creating new bid entity: {}", newBid);
         Bid savedBid = bidRepository.save(newBid);
 
         // --- Update Auction Metadata ---
+        log.debug("Updating auction {} with new highest bid {}", auction.getAuctionId(), newBid.getBidPrice());
         auction.setCurrentPrice(newBid.getBidPrice());
         auction.setHighestBidder(buyer);
         auctionRepository.save(auction);
@@ -92,6 +103,7 @@ public class BidService {
                 auction.getHighestBidder().getUsername()
         );
 
+        log.debug("Broadcasting price update: {}", updatePayload);
         // 2. Broadcast the update to all clients subscribed to this auction's topic
         String destination = "/topic/auction/" + auction.getAuctionId();
         messagingTemplate.convertAndSend(destination, updatePayload);
@@ -102,12 +114,14 @@ public class BidService {
     // 2. Get Bids for Current User
     public List<GetBidDto> getBidsByUserId(Long userId) {
         List<Bid> bids = bidRepository.findByBuyer_UserIdOrderByCreatedAtDesc(userId);
+        log.debug("Fetched {} bids for user {}", bids.size(), userId);
         return mapper.toDto(bids);
     }
 
     // 3. Get Active/All Bids for an Auction (assuming owner/admin access)
     public List<GetBidDto> getBidsByAuctionId(Long auctionId) {
         List<Bid> bids = bidRepository.findByAuction_AuctionIdOrderByBidPriceDesc(auctionId);
+        log.debug("Fetched {} bids for auction {}", bids.size(), auctionId);
         return mapper.toDto(bids);
     }
 }

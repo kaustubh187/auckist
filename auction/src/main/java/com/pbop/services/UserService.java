@@ -1,5 +1,6 @@
 package com.pbop.services;
 
+import com.pbop.config.GlobalExceptionHandler;
 import com.pbop.dtos.user.LoginDto;
 import com.pbop.dtos.user.RegisterUserDto;
 import com.pbop.enums.UserRole;
@@ -8,6 +9,8 @@ import com.pbop.mappers.UserMapper;
 import com.pbop.models.User;
 import com.pbop.repositories.UserRepo;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +31,8 @@ public class UserService {
     private final UserMapper userMapper;
     private final JwtService jwtService;
 
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
     @Autowired
     public UserService(UserRepo repo, AuthenticationManager authenticationManager, UserMapper userMapper, JwtService jwtService) {
         this.repo = repo;
@@ -44,7 +49,7 @@ public class UserService {
         User user = userMapper.toEntity(registerUserDto);
         user.setPassword(encoder.encode(user.getPassword()));
         try {
-
+            log.debug("Attempting to set role: {}", registerUserDto.role());
             UserRole roleEnum = UserRole.valueOf(registerUserDto.role().toUpperCase());
             user.setRole(roleEnum);
         } catch (IllegalArgumentException e) {
@@ -52,6 +57,7 @@ public class UserService {
 
             throw new InvalidRoleException("Invalid role provided. Role must be one of: " + validRoles);
         }
+        log.debug("Registering user with email: {} and role: {}", user.getEmail(), user.getRole());
         repo.save(user);
 
         return ResponseEntity.ok("User registered successfully");
@@ -69,6 +75,7 @@ public class UserService {
         }
     }
     public List<User> getUsers(){
+        log.debug("Fetching all users from the database");
         return repo.findAll();
     }
 }
