@@ -1,9 +1,10 @@
 package com.pbop.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pbop.enums.UserRole;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;

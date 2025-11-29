@@ -19,9 +19,15 @@ import java.util.List;
 @RequestMapping("/auctions")
 public class AuctionController {
 
+    private final AuctionService auctionService;
+    private final UserRepo userRepository;
+
+
     @Autowired
-    private AuctionService auctionService;
-    @Autowired private UserRepo userRepository;
+    public AuctionController(AuctionService auctionService, UserRepo userRepository) {
+        this.auctionService = auctionService;
+        this.userRepository = userRepository;
+    }
 
     private Long getAuthenticatedUserId(UserDetails userDetails) {
         User user = userRepository.findByEmail(userDetails.getUsername());

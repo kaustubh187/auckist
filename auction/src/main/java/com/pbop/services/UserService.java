@@ -23,16 +23,18 @@ import java.util.stream.Collectors;
 
 @Service
 public class UserService {
-    @Autowired
-    private UserRepo repo;
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final UserRepo repo;
+    private final AuthenticationManager authenticationManager;
+    private final UserMapper userMapper;
+    private final JwtService jwtService;
 
     @Autowired
-    private UserMapper userMapper;
-
-    @Autowired
-    private JwtService jwtService;
+    public UserService(UserRepo repo, AuthenticationManager authenticationManager, UserMapper userMapper, JwtService jwtService) {
+        this.repo = repo;
+        this.authenticationManager = authenticationManager;
+        this.userMapper = userMapper;
+        this.jwtService = jwtService;
+    }
 
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(11);
 

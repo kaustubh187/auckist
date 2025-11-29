@@ -19,11 +19,14 @@ import java.util.List;
 @RequestMapping("bids")
 public class BidController {
 
-    @Autowired
-    private BidService bidService;
+    private final BidService bidService;
+    private final UserRepo userRepository;
 
     @Autowired
-    private UserRepo userRepository;
+    public BidController(BidService bidService, UserRepo userRepository) {
+        this.bidService = bidService;
+        this.userRepository = userRepository;
+    }
 
     private Long getAuthenticatedUserId(UserDetails userDetails) {
         User user = userRepository.findByEmail(userDetails.getUsername());

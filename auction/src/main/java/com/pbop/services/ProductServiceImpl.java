@@ -5,8 +5,6 @@ import com.pbop.dtos.product.GetProductDto;
 import com.pbop.enums.ProductCategory;
 import com.pbop.mappers.ProductMapper;
 import com.pbop.models.Product;
-import com.pbop.models.ProductImage;
-import com.pbop.models.User;
 import com.pbop.repositories.ProductRepo;
 import com.pbop.repositories.UserRepo;
 import jakarta.transaction.Transactional;
@@ -25,15 +23,22 @@ import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
-    @Autowired
-    private ProductRepo repository;
-    @Autowired private UserRepo userRepository; // For fetching owner
-    @Autowired private ProductMapper mapper;
-    @Autowired private ProductImageService imageService;
+    private final ProductRepo repository;
+    private final UserRepo userRepository; // For fetching owner
+    private final ProductMapper mapper;
+    private final ProductImageService imageService;
 
     // Example Exception (You should define this custom exception)
     // For simplicity here, assume this maps to 404 Not Found
     // e.g., public class ProductNotFoundException extends RuntimeException {}
+
+    @Autowired
+    public ProductServiceImpl(ProductRepo repository, UserRepo userRepository, ProductMapper mapper, ProductImageService imageService) {
+        this.repository = repository;
+        this.userRepository = userRepository;
+        this.mapper = mapper;
+        this.imageService = imageService;
+    }
 
     @Override
     public Product saveProduct(CreateProductDto dto, List<MultipartFile> files, String email) {
@@ -42,7 +47,7 @@ public class ProductServiceImpl implements ProductService {
         product.setOwner(userRepository.findByEmail(email));
 
         Product savedProduct = repository.save(product);
-        Set<ProductImage> savedImages = imageService.saveImagesForProduct(files, savedProduct);
+        imageService.saveImagesForProduct(files, savedProduct);
 
         return repository.save(product);
     }
@@ -75,8 +80,6 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public Page<GetProductDto> searchProductsByKeyword(String keyword, int page, int size) {
-
-        Pageable pageable = PageRequest.of(page, size);
 
         List<Product> nameMatches = repository.findByNameContainingIgnoreCase(keyword);
         List<Product> descMatches = repository.findByDescriptionContainingIgnoreCase(keyword);

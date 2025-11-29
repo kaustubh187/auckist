@@ -16,25 +16,28 @@ import com.pbop.repositories.BidRepo;
 import com.pbop.repositories.UserRepo;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Service
 public class BidService {
-    @Autowired
-    private BidRepo bidRepository;
-    @Autowired private AuctionRepo auctionRepository; // To check auction status/price
-    @Autowired private UserRepo userRepository;
-    @Autowired private BidMapper mapper;
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
+    private final BidRepo bidRepository;
+    private final AuctionRepo auctionRepository; // To check auction status/price
+    private final UserRepo userRepository;
+    private final BidMapper mapper;
+    private final SimpMessagingTemplate messagingTemplate; // For WebSocket messaging
 
-
+    @Autowired
+    public BidService(BidRepo bidRepository, AuctionRepo auctionRepository, UserRepo userRepository, BidMapper mapper, SimpMessagingTemplate messagingTemplate) {
+        this.bidRepository = bidRepository;
+        this.auctionRepository = auctionRepository;
+        this.userRepository = userRepository;
+        this.mapper = mapper;
+        this.messagingTemplate = messagingTemplate;
+    }
 
 
     // 1. Placing a Bid

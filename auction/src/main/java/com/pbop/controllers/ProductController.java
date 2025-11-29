@@ -5,8 +5,6 @@ import com.pbop.dtos.product.GetProductDto;
 import com.pbop.enums.ProductCategory;
 import com.pbop.mappers.ProductMapper;
 import com.pbop.models.Product;
-import com.pbop.models.User;
-import com.pbop.services.JwtService;
 import com.pbop.services.ProductServiceImpl;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -27,19 +25,20 @@ import java.util.List;
 @SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/products")
 public class ProductController {
-    @Autowired
-    private ProductServiceImpl productService;
+
+    private final ProductServiceImpl productService;
+    private final ProductMapper productMapper;
 
     @Autowired
-    private ProductMapper productMapper;
-
-    @Autowired
-    private JwtService jwtService;
+    public ProductController(ProductServiceImpl productService, ProductMapper productMapper) {
+        this.productService = productService;
+        this.productMapper = productMapper;
+    }
 
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<GetProductDto> uploadProduct(@ModelAttribute @Valid CreateProductDto dto, @RequestParam("files") List<MultipartFile> files, @AuthenticationPrincipal UserDetails userDetails) {
 
-        Product savedProduct = productService.saveProduct(dto,files,userDetails.getUsername());
+        Product savedProduct = productService.saveProduct(dto, files, userDetails.getUsername());
         return new ResponseEntity<>(productMapper.toDto(savedProduct), HttpStatus.CREATED);
     }
 

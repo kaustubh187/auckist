@@ -14,9 +14,12 @@ import java.util.Set;
 
 @Service
 public class ProductImageService {
-    @Autowired
-    private ProductImageRepo imageRepository; // Assume a JPA repo for ProductImage
+    private final ProductImageRepo imageRepository; // Assume a JPA repo for ProductImage
 
+    @Autowired
+    public ProductImageService(ProductImageRepo imageRepository) {
+        this.imageRepository = imageRepository;
+    }
 
     public Set<ProductImage> saveImagesForProduct(List<MultipartFile> files, Product product) {
         if (files == null || files.isEmpty()) {

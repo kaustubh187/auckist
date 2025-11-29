@@ -21,11 +21,18 @@ import java.util.List;
 
 @Service
 public class AuctionService {
+    private final AuctionRepo auctionRepository;
+    private final ProductRepo productRepository;
+    private final AuctionMapper mapper;
+    private final UserRepo userRepository;
+
     @Autowired
-    private AuctionRepo auctionRepository;
-    @Autowired private ProductRepo productRepository;
-    @Autowired private AuctionMapper mapper;
-    @Autowired private UserRepo userRepository;
+    public AuctionService(AuctionRepo auctionRepository, ProductRepo productRepository, AuctionMapper mapper, UserRepo userRepository) {
+        this.auctionRepository = auctionRepository;
+        this.productRepository = productRepository;
+        this.mapper = mapper;
+        this.userRepository = userRepository;
+    }
 
     // --- Public methods from the Service Interface (not shown for brevity) ---
 
